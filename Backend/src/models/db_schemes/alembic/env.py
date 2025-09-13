@@ -3,7 +3,16 @@ import sys
 from logging.config import fileConfig
 
 # Add the project root to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+sys.path.insert(0, project_root)
+
+# Add the models directory to the Python path
+models_path = os.path.join(project_root, 'models')
+sys.path.insert(0, models_path)
+
+# Add the src directory to the Python path
+src_path = os.path.join(project_root, '..')
+sys.path.insert(0, src_path)
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -12,8 +21,23 @@ from alembic import context
 # Import your SQLAlchemy models here
 from db_schemes.schemes.base import SQLAlchemyBase
 
+# Import enums first
+# Fixed import - importing specific enums instead of using wildcard
+from models.enums.user_role import UserRole
+from models.enums.user_status import UserStatus
+from models.enums.task_status import TaskStatus
+from models.enums.priority import Priority
+from models.enums.report_type import ReportType
+
 # Now import all models
-from model import *
+from models.model.user import User
+from models.model.task import Task
+from models.model.student_task import Student_Task
+from models.model.business_task import Business_Task
+from models.model.employment_task import Employment_Task
+from models.model.certification_task import Certification_Task
+from models.model.ai_report import AI_Report
+from models.model.task_status_history import Task_Status_History
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

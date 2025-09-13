@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from db_schemes.schemes.base import Base
-from enums.priority import Priority
+from models.enums.priority import Priority
 
 class Business_Task(Base):
     __tablename__ = "business_tasks"

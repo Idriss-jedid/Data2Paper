@@ -1,4 +1,3 @@
-
 # Import all models
 from .model.user import User
 from .model.task import Task
@@ -14,5 +13,5 @@ from .enums.task_status import TaskStatus
 from .enums.priority import Priority
 from .enums.report_type import ReportType
 
-# Import base
-from .db_schemes.base import Base, get_db
+# Import base - Fixed the import path
+from .db_schemes.schemes.base import Base, SQLAlchemyBase

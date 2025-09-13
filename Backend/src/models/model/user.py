@@ -4,16 +4,8 @@ from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 from db_schemes.schemes.base import Base
 
-from enum import Enum as PyEnum
-
-class UserRole(PyEnum):
-    STUDENT = "Student"
-    EMPLOYEE = "Employee"
-    ADMIN = "Admin"
-
-class UserStatus(PyEnum):
-    ACTIVE = "Active"
-    INACTIVE = "Inactive"
+from models.enums.user_role import UserRole
+from models.enums.user_status import UserStatus
 
 class User(Base):
     __tablename__ = "users"
