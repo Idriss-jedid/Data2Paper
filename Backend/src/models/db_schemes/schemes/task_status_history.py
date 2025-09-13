@@ -1,8 +1,7 @@
-
 from datetime import datetime
 from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
-from db_schemes.schemes.base import Base
+from .base import Base
 from models.enums.task_status import TaskStatus
 
 class Task_Status_History(Base):

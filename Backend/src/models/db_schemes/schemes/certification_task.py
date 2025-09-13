@@ -1,8 +1,7 @@
-
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from db_schemes.schemes.base import Base
+from .base import Base
 
 class Certification_Task(Base):
     __tablename__ = "certification_tasks"

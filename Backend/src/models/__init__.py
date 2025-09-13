@@ -15,3 +15,6 @@ from .enums.report_type import ReportType
 
 # Import base - Fixed the import path
 from .db_schemes.schemes.base import Base, SQLAlchemyBase
+
+# Import CRUD modules
+from .model import user, task, CRUDUser, CRUDTask
