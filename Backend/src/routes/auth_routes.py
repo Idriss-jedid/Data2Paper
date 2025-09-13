@@ -44,6 +44,7 @@ def register_user(user_create: UserCreate, db: Session = Depends(get_db)):
         id=db_user.id,
         name=db_user.name,
         email=db_user.email,
+        role=db_user.role,
         is_active=db_user.is_active
     )
 
@@ -89,6 +90,7 @@ def read_users_me(current_user = Depends(get_current_active_user)):
         id=current_user.id,
         name=current_user.name,
         email=current_user.email,
+        role=current_user.role,
         is_active=current_user.is_active
     )
 
