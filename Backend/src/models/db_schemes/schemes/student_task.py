@@ -12,4 +12,3 @@ class Student_Task(Base):
     deadline = Column(DateTime, nullable=False)
     
     task = relationship("Task", back_populates="student_task")
-    

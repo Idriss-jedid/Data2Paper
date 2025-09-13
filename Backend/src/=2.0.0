@@ -1,0 +1,2 @@
+Requirement already satisfied: pydantic in /home/smart/miniconda3/envs/mini-rag-app/lib/python3.10/site-packages (1.10.22)
+Requirement already satisfied: typing-extensions>=4.2.0 in /home/smart/miniconda3/envs/mini-rag-app/lib/python3.10/site-packages (from pydantic) (4.12.2)
