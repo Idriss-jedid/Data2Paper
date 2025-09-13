@@ -5,10 +5,12 @@ from typing import List
 from database import get_db
 from models.model.user import user, CRUDUser
 from schemas.user import User, UserCreate, UserUpdate
+from auth import get_current_active_user
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"]
+    tags=["users"],
+    dependencies=[Depends(get_current_active_user)]  # Protect all routes
 )
 
 @router.get("/", response_model=List[User])

@@ -13,10 +13,15 @@ class User(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), nullable=False)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     status = Column(Enum(UserStatus), default=UserStatus.ACTIVE, nullable=False)
 
     tasks = relationship("Task", back_populates="user")
     ai_reports = relationship("AI_Report", back_populates="user")
+
+    @property
+    def is_active(self) -> bool:
+        """Check if user is active based on status"""
+        return self.status == UserStatus.ACTIVE

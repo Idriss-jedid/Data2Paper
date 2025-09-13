@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     mail_server: str
     mail_from_name: str
     
+    # JWT Settings
+    secret_key: str = "your-secret-key-here-change-in-production"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
     )
