@@ -5,18 +5,18 @@ from typing import List
 from database import get_db
 from models.model.user import user, CRUDUser
 from schemas.user import User, UserCreate, UserUpdate
-from auth import get_current_active_user
+from models.model.auth import get_current_active_user  # Fixed import
 
 router = APIRouter(
     prefix="/users",
     tags=["users"],
-    dependencies=[Depends(get_current_active_user)]  # Protect all routes
+    dependencies=[Depends(get_current_active_user)]
 )
 
 @router.get("/", response_model=List[User])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = user.get_multi(db, skip=skip, limit=limit)
-    # Convert SQLAlchemy models to Pydantic models
+
     return [
         User(
             id=u.id,
@@ -36,8 +36,8 @@ def create_user(user_create: UserCreate, db: Session = Depends(get_db)):
     user_data = {
         "name": user_create.name,
         "email": user_create.email,
-        "password_hash": "default_password_hash",  # This should be properly hashed in a real application
-        "role": user_create.role.value if user_create.role else "USER"  # Use the role from the request or default to USER
+        "password_hash": user.get_password_hash(user_create.password),  # Properly hash the password
+        "role": user_create.role.value if user_create.role else "User"  # Use the role from the request or default to User
     }
     # Create a simple object with dict method for compatibility with CRUD base
     class UserDataObject:
@@ -71,16 +71,16 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
     db_user = user.get(db, id=user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    # Convert Pydantic model to dict for CRUD operations
     update_data = {}
     if user_update.name is not None:
         update_data["name"] = user_update.name
     if user_update.email is not None:
         update_data["email"] = user_update.email
+    if user_update.password is not None:
+        update_data["password_hash"] = user.get_password_hash(user_update.password)  # Hash password if provided
     if user_update.role is not None:
         update_data["role"] = user_update.role.value
         
-    # Create a simple object with dict method for compatibility with CRUD base
     class UserDataObject:
         def dict(self, **kwargs):
             return update_data

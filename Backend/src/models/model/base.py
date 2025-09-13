@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Generic, TypeVar, Type, List, Optional
+from enum import Enum
 from ..db_schemes.schemes.base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -24,7 +25,12 @@ class CRUDBase(Generic[ModelType]):
 
     def create(self, db: Session, *, obj_in) -> ModelType:
         """Create a new record"""
-        db_obj = self.model(**obj_in.dict())
+        obj_data = obj_in.dict()
+        # Handle enum values properly
+        for key, value in obj_data.items():
+            if isinstance(value, Enum):
+                obj_data[key] = value.value
+        db_obj = self.model(**obj_data)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -33,8 +39,11 @@ class CRUDBase(Generic[ModelType]):
     def update(self, db: Session, *, db_obj: ModelType, obj_in) -> ModelType:
         """Update an existing record"""
         obj_data = obj_in.dict(exclude_unset=True)
-        for field in obj_data:
-            setattr(db_obj, field, obj_data[field])
+        # Handle enum values properly
+        for key, value in obj_data.items():
+            if isinstance(value, Enum):
+                obj_data[key] = value.value
+            setattr(db_obj, key, obj_data[key])
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

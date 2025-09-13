@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.model.user import user as crud_user
 from schemas.user import User, UserCreate, Token, UserLogin
-from auth import authenticate_user, create_access_token, get_password_hash, get_current_active_user
+from models.model.auth import authenticate_user, create_access_token, get_password_hash, get_current_active_user
 from config import settings
 
 router = APIRouter(
@@ -31,11 +31,17 @@ def register_user(user_create: UserCreate, db: Session = Depends(get_db)):
     # Create user data object with proper structure
     class UserData:
         def dict(self, **kwargs):
-            return {
+            user_data = {
                 "name": user_create.name,
                 "email": user_create.email,
                 "password_hash": hashed_password
             }
+            # Add role if provided, otherwise use default
+            if user_create.role:
+                user_data["role"] = user_create.role.value
+            else:
+                user_data["role"] = "User"  # Default role value
+            return user_data
     
     # Create the user
     db_user = crud_user.create(db=db, obj_in=UserData())
