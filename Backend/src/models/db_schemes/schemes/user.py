@@ -2,10 +2,10 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
-from db_schemes.schemes.base import Base
+from .base import Base
 
-from models.enums.user_role import UserRole
-from models.enums.user_status import UserStatus
+from ...enums.user_role import UserRole
+from ...enums.user_status import UserStatus
 
 class User(Base):
     __tablename__ = "users"
