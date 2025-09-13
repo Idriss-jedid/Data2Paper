@@ -5,10 +5,12 @@ from typing import List
 from database import get_db
 from models.model.task import task, CRUDTask
 from schemas.task import Task, TaskCreate, TaskUpdate
+from auth import get_current_active_user
 
 router = APIRouter(
     prefix="/tasks",
-    tags=["tasks"]
+    tags=["tasks"],
+    dependencies=[Depends(get_current_active_user)]  # Protect all routes
 )
 
 @router.get("/", response_model=List[Task])

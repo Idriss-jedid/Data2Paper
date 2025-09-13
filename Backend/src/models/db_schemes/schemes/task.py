@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship, backref
 from .base import Base
-from models.enums.task_status import TaskStatus
+from ...enums.task_status import TaskStatus
 
 # Import for type hints
 from typing import Optional

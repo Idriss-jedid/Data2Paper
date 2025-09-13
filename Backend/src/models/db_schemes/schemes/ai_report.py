@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from .base import Base
-from models.enums.report_type import ReportType
+from ...enums.report_type import ReportType
 
 
 class AI_Report(Base):

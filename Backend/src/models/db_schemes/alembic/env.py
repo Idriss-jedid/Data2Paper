@@ -3,15 +3,11 @@ import sys
 from logging.config import fileConfig
 
 # Add the project root to the Python path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../'))
 sys.path.insert(0, project_root)
 
-# Add the models directory to the Python path
-models_path = os.path.join(project_root, 'models')
-sys.path.insert(0, models_path)
-
-# Add the src directory to the Python path
-src_path = os.path.join(project_root, '..')
+# Add the src directory to the Python path  
+src_path = os.path.join(project_root, 'src')
 sys.path.insert(0, src_path)
 
 from sqlalchemy import engine_from_config
@@ -19,10 +15,9 @@ from sqlalchemy import pool
 from alembic import context
 
 # Import your SQLAlchemy models here
-from db_schemes.schemes.base import SQLAlchemyBase
+from models.db_schemes.schemes.base import Base
 
 # Import enums first
-# Fixed import - importing specific enums instead of using wildcard
 from models.enums.user_role import UserRole
 from models.enums.user_status import UserStatus
 from models.enums.task_status import TaskStatus
@@ -52,7 +47,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = SQLAlchemyBase.metadata
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
