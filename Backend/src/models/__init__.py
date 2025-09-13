@@ -1,12 +1,12 @@
 # Import all models
-from .model.user import User
-from .model.task import Task
-from .model.student_task import Student_Task
-from .model.business_task import Business_Task
-from .model.employment_task import Employment_Task
-from .model.certification_task import Certification_Task
-from .model.ai_report import AI_Report
-from .model.task_status_history import Task_Status_History
+from .db_schemes.schemes.user import User
+from .db_schemes.schemes.task import Task
+from .db_schemes.schemes.student_task import Student_Task
+from .db_schemes.schemes.business_task import Business_Task
+from .db_schemes.schemes.employment_task import Employment_Task
+from .db_schemes.schemes.certification_task import Certification_Task
+from .db_schemes.schemes.ai_report import AI_Report
+from .db_schemes.schemes.task_status_history import Task_Status_History
 
 # Import enums
 from .enums.task_status import TaskStatus

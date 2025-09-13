@@ -30,14 +30,14 @@ from models.enums.priority import Priority
 from models.enums.report_type import ReportType
 
 # Now import all models
-from models.model.user import User
-from models.model.task import Task
-from models.model.student_task import Student_Task
-from models.model.business_task import Business_Task
-from models.model.employment_task import Employment_Task
-from models.model.certification_task import Certification_Task
-from models.model.ai_report import AI_Report
-from models.model.task_status_history import Task_Status_History
+from models.db_schemes.schemes.user import User
+from models.db_schemes.schemes.task import Task
+from models.db_schemes.schemes.student_task import Student_Task
+from models.db_schemes.schemes.business_task import Business_Task
+from models.db_schemes.schemes.employment_task import Employment_Task
+from models.db_schemes.schemes.certification_task import Certification_Task
+from models.db_schemes.schemes.ai_report import AI_Report
+from models.db_schemes.schemes.task_status_history import Task_Status_History
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
