@@ -20,10 +20,10 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return [
         User(
             id=u.id,
-            username=u.name,
+            name=u.name,
             email=u.email,
-            full_name=u.name,
-            role=u.role
+            role=u.role,
+            is_active=u.is_active
         ) for u in users
     ]
 
@@ -33,12 +33,11 @@ def create_user(user_create: UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     # Create user data dictionary with correct field names
-    # Map full_name from schema to name in database model
     user_data = {
-        "name": user_create.full_name or user_create.username,
+        "name": user_create.name,
         "email": user_create.email,
         "password_hash": "default_password_hash",  # This should be properly hashed in a real application
-        "role": user_create.role.value if user_create.role else "Student"  # Use the role from the request or default to Student
+        "role": user_create.role.value if user_create.role else "USER"  # Use the role from the request or default to USER
     }
     # Create a simple object with dict method for compatibility with CRUD base
     class UserDataObject:
@@ -48,10 +47,10 @@ def create_user(user_create: UserCreate, db: Session = Depends(get_db)):
     created_user = user.create(db, obj_in=UserDataObject())
     return User(
         id=created_user.id,
-        username=created_user.name,
+        name=created_user.name,
         email=created_user.email,
-        full_name=created_user.name,
-        role=created_user.role
+        role=created_user.role,
+        is_active=created_user.is_active
     )
 
 @router.get("/{user_id}", response_model=User)
@@ -61,10 +60,10 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return User(
         id=db_user.id,
-        username=db_user.name,
+        name=db_user.name,
         email=db_user.email,
-        full_name=db_user.name,
-        role=db_user.role
+        role=db_user.role,
+        is_active=db_user.is_active
     )
 
 @router.put("/{user_id}", response_model=User)
@@ -74,10 +73,8 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
         raise HTTPException(status_code=404, detail="User not found")
     # Convert Pydantic model to dict for CRUD operations
     update_data = {}
-    if user_update.full_name is not None:
-        update_data["name"] = user_update.full_name
-    if user_update.username is not None:
-        update_data["name"] = user_update.username
+    if user_update.name is not None:
+        update_data["name"] = user_update.name
     if user_update.email is not None:
         update_data["email"] = user_update.email
     if user_update.role is not None:
@@ -95,10 +92,10 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
     )
     return User(
         id=updated_user.id,
-        username=updated_user.name,
+        name=updated_user.name,
         email=updated_user.email,
-        full_name=updated_user.name,
-        role=updated_user.role
+        role=updated_user.role,
+        is_active=updated_user.is_active
     )
 
 @router.delete("/{user_id}", response_model=dict)
