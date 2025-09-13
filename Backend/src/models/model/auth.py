@@ -10,20 +10,15 @@ from database import get_db
 from models.model.user import user as crud_user
 from schemas.user import TokenData
 
-# Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against its hash"""
-    # Handle both hashed and plain text passwords for backward compatibility
     try:
-        # Try to verify as a hashed password first
         return pwd_context.verify(plain_password, hashed_password)
     except:
-        # If that fails, fall back to plain text comparison
         return plain_password == hashed_password
 
 def get_password_hash(password: str) -> str:

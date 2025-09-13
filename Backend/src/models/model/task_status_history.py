@@ -15,5 +15,4 @@ class CRUDTaskStatusHistory(CRUDBase[Task_Status_History]):
             self.model.status == status
         ).all()
 
-# Create an instance of CRUDTaskStatusHistory for direct use
 task_status_history = CRUDTaskStatusHistory(Task_Status_History)

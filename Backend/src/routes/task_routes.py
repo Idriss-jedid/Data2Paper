@@ -52,7 +52,6 @@ def create_task(task_create: TaskCreate, db: Session = Depends(get_db)):
     
     created_task = task.create(db, obj_in=TaskDataObject())
     
-    # Create specialized task based on task type
     if task_create.task_type == TaskType.STUDENT:
         if not task_create.subject or not task_create.deadline:
             raise HTTPException(status_code=400, detail="Student tasks require subject and deadline")
