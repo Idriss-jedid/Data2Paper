@@ -2,6 +2,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from ..db_schemes.schemes.user import User
 from .base import CRUDBase
+from passlib.context import CryptContext
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class CRUDUser(CRUDBase[User]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
@@ -21,15 +25,22 @@ class CRUDUser(CRUDBase[User]):
         user = self.get_by_email(db, email=email)
         if not user:
             return None
-        if not self.verify_password(password, user.hashed_password):
+        if not self.verify_password(password, user.password_hash):
             return None
         return user
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        """Verify a password against its hash"""
-        # This is a placeholder - you would implement actual password verification here
-        # using a library like passlib
-        return plain_password == hashed_password
+        """Verify a password against its hash, handling both hashed and plain text for backward compatibility"""
+        try:
+            # Try to verify as a hashed password first
+            return pwd_context.verify(plain_password, hashed_password)
+        except:
+            # If that fails, fall back to plain text comparison
+            return plain_password == hashed_password
+
+    def get_password_hash(self, password: str) -> str:
+        """Hash a password"""
+        return pwd_context.hash(password)
 
     def is_active(self, user: User) -> bool:
         """Check if a user is active"""
