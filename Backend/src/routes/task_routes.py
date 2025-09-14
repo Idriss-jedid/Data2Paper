@@ -4,8 +4,12 @@ from typing import List
 
 from database import get_db
 from models.model.task import task, CRUDTask
-from schemas.task import Task, TaskCreate, TaskUpdate, TaskType
-from models.model.auth import get_current_active_user  # Fixed import
+from schemas.task import Task, TaskCreate, TaskUpdate
+from schemas.student_task import StudentTaskCreate
+from schemas.business_task import BusinessTaskCreate
+from schemas.employment_task import EmploymentTaskCreate
+from schemas.certification_task import CertificationTaskCreate
+from models.model.auth import get_current_active_user
 from models.db_schemes.schemes.task import Task as TaskModel
 from models.db_schemes.schemes.student_task import Student_Task
 from models.db_schemes.schemes.business_task import Business_Task
@@ -14,6 +18,7 @@ from models.db_schemes.schemes.certification_task import Certification_Task
 from models.db_schemes.schemes.task_status_history import Task_Status_History
 from models.enums.task_status import TaskStatus
 from models.enums.priority import Priority
+from models.db_schemes.schemes.user import User
 
 router = APIRouter(
     prefix="/tasks",
@@ -35,14 +40,14 @@ def read_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         ) for t in tasks
     ]
 
-@router.post("/", response_model=Task)
-def create_task(task_create: TaskCreate, db: Session = Depends(get_db)):
+@router.post("/student", response_model=Task)
+def create_student_task(task_create: StudentTaskCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     # Create the base task
     task_data = {
         "title": task_create.title,
         "description": task_create.description,
-        "user_id": task_create.user_id,
-        "status": TaskStatus.PENDING  # Use the enum value directly
+        "user_id": current_user.id,  # Use current user ID
+        "status": TaskStatus.PENDING
     }
     
     # Create a proper object with dict method
@@ -52,58 +57,172 @@ def create_task(task_create: TaskCreate, db: Session = Depends(get_db)):
     
     created_task = task.create(db, obj_in=TaskDataObject())
     
-    if task_create.task_type == TaskType.STUDENT:
-        if not task_create.subject or not task_create.deadline:
-            raise HTTPException(status_code=400, detail="Student tasks require subject and deadline")
-        student_task_data = {
-            "task_id": created_task.id,
-            "subject": task_create.subject,
-            "deadline": task_create.deadline
-        }
-        student_task = Student_Task(**student_task_data)
-        db.add(student_task)
-    
-    elif task_create.task_type == TaskType.BUSINESS:
-        if not task_create.project_name or not task_create.due_date:
-            raise HTTPException(status_code=400, detail="Business tasks require project_name and due_date")
-        business_task_data = {
-            "task_id": created_task.id,
-            "project_name": task_create.project_name,
-            "priority": task_create.priority or Priority.MEDIUM,
-            "due_date": task_create.due_date
-        }
-        business_task = Business_Task(**business_task_data)
-        db.add(business_task)
-    
-    elif task_create.task_type == TaskType.EMPLOYMENT:
-        if not task_create.company or not task_create.position or not task_create.deadline:
-            raise HTTPException(status_code=400, detail="Employment tasks require company, position and deadline")
-        employment_task_data = {
-            "task_id": created_task.id,
-            "company": task_create.company,
-            "position": task_create.position,
-            "deadline": task_create.deadline
-        }
-        employment_task = Employment_Task(**employment_task_data)
-        db.add(employment_task)
-    
-    elif task_create.task_type == TaskType.CERTIFICATION:
-        if not task_create.certification_name or not task_create.issuer:
-            raise HTTPException(status_code=400, detail="Certification tasks require certification_name and issuer")
-        certification_task_data = {
-            "task_id": created_task.id,
-            "certification_name": task_create.certification_name,
-            "issuer": task_create.issuer,
-            "expiry_date": task_create.expiry_date
-        }
-        certification_task = Certification_Task(**certification_task_data)
-        db.add(certification_task)
+    # Create student task
+    if not task_create.subject or not task_create.deadline:
+        raise HTTPException(status_code=400, detail="Student tasks require subject and deadline")
+    student_task_data = {
+        "task_id": created_task.id,
+        "subject": task_create.subject,
+        "deadline": task_create.deadline
+    }
+    student_task = Student_Task(**student_task_data)
+    db.add(student_task)
     
     # Create initial task status history entry
     status_history_data = {
         "task_id": created_task.id,
         "status": TaskStatus.PENDING,
-        "note": task_create.initial_note  # Use custom note
+        "note": task_create.initial_note
+    }
+    status_history = Task_Status_History(**status_history_data)
+    db.add(status_history)
+    
+    # Commit all changes
+    db.commit()
+    db.refresh(created_task)
+    
+    return Task(
+        id=created_task.id,
+        title=created_task.title,
+        description=created_task.description or "",
+        status=created_task.status,
+        user_id=created_task.user_id
+    )
+
+@router.post("/business", response_model=Task)
+def create_business_task(task_create: BusinessTaskCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    # Create the base task
+    task_data = {
+        "title": task_create.title,
+        "description": task_create.description,
+        "user_id": current_user.id,  # Use current user ID
+        "status": TaskStatus.PENDING
+    }
+    
+    # Create a proper object with dict method
+    class TaskDataObject:
+        def dict(self):
+            return task_data
+    
+    created_task = task.create(db, obj_in=TaskDataObject())
+    
+    # Create business task
+    if not task_create.project_name or not task_create.due_date:
+        raise HTTPException(status_code=400, detail="Business tasks require project_name and due_date")
+    business_task_data = {
+        "task_id": created_task.id,
+        "project_name": task_create.project_name,
+        "priority": task_create.priority or Priority.MEDIUM,
+        "due_date": task_create.due_date
+    }
+    business_task = Business_Task(**business_task_data)
+    db.add(business_task)
+    
+    # Create initial task status history entry
+    status_history_data = {
+        "task_id": created_task.id,
+        "status": TaskStatus.PENDING,
+        "note": task_create.initial_note
+    }
+    status_history = Task_Status_History(**status_history_data)
+    db.add(status_history)
+    
+    # Commit all changes
+    db.commit()
+    db.refresh(created_task)
+    
+    return Task(
+        id=created_task.id,
+        title=created_task.title,
+        description=created_task.description or "",
+        status=created_task.status,
+        user_id=created_task.user_id
+    )
+
+@router.post("/employment", response_model=Task)
+def create_employment_task(task_create: EmploymentTaskCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    # Create the base task
+    task_data = {
+        "title": task_create.title,
+        "description": task_create.description,
+        "user_id": current_user.id,  # Use current user ID
+        "status": TaskStatus.PENDING
+    }
+    
+    # Create a proper object with dict method
+    class TaskDataObject:
+        def dict(self):
+            return task_data
+    
+    created_task = task.create(db, obj_in=TaskDataObject())
+    
+    # Create employment task
+    if not task_create.company or not task_create.position or not task_create.deadline:
+        raise HTTPException(status_code=400, detail="Employment tasks require company, position and deadline")
+    employment_task_data = {
+        "task_id": created_task.id,
+        "company": task_create.company,
+        "position": task_create.position,
+        "deadline": task_create.deadline
+    }
+    employment_task = Employment_Task(**employment_task_data)
+    db.add(employment_task)
+    
+    # Create initial task status history entry
+    status_history_data = {
+        "task_id": created_task.id,
+        "status": TaskStatus.PENDING,
+        "note": task_create.initial_note
+    }
+    status_history = Task_Status_History(**status_history_data)
+    db.add(status_history)
+    
+    # Commit all changes
+    db.commit()
+    db.refresh(created_task)
+    
+    return Task(
+        id=created_task.id,
+        title=created_task.title,
+        description=created_task.description or "",
+        status=created_task.status,
+        user_id=created_task.user_id
+    )
+
+@router.post("/certification", response_model=Task)
+def create_certification_task(task_create: CertificationTaskCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    # Create the base task
+    task_data = {
+        "title": task_create.title,
+        "description": task_create.description,
+        "user_id": current_user.id,  # Use current user ID
+        "status": TaskStatus.PENDING
+    }
+    
+    # Create a proper object with dict method
+    class TaskDataObject:
+        def dict(self):
+            return task_data
+    
+    created_task = task.create(db, obj_in=TaskDataObject())
+    
+    # Create certification task
+    if not task_create.certification_name or not task_create.issuer:
+        raise HTTPException(status_code=400, detail="Certification tasks require certification_name and issuer")
+    certification_task_data = {
+        "task_id": created_task.id,
+        "certification_name": task_create.certification_name,
+        "issuer": task_create.issuer,
+        "expiry_date": task_create.expiry_date
+    }
+    certification_task = Certification_Task(**certification_task_data)
+    db.add(certification_task)
+    
+    # Create initial task status history entry
+    status_history_data = {
+        "task_id": created_task.id,
+        "status": TaskStatus.PENDING,
+        "note": task_create.initial_note
     }
     status_history = Task_Status_History(**status_history_data)
     db.add(status_history)
