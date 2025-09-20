@@ -1,7 +1,9 @@
 from datetime import timedelta
+import re
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from database import get_db
 from models.model.user import user as crud_user
@@ -14,11 +16,91 @@ router = APIRouter(
     tags=["authentication"]
 )
 
+# Email validation schemas
+class EmailCheckRequest(BaseModel):
+    email: str
+
+class EmailCheckResponse(BaseModel):
+    email: str
+    is_available: bool
+    is_valid: bool
+    message: str
+
+def validate_email_format(email: str) -> bool:
+    """Validate email format using regex"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def is_disposable_email(email: str) -> bool:
+    """Check if email is from a disposable email provider"""
+    disposable_domains = {
+        '10minutemail.com', '10minutemail.net', 'guerrillamail.com',
+        'mailinator.com', 'yopmail.com', 'tempmail.org', 'throwaway.email',
+        'temp-mail.org', 'getnada.com', 'maildrop.cc', 'sharklasers.com'
+    }
+    domain = email.split('@')[1].lower() if '@' in email else ''
+    return domain in disposable_domains
+
+@router.post("/check-email", response_model=EmailCheckResponse)
+def check_email_availability(request: EmailCheckRequest, db: Session = Depends(get_db)):
+    """Check if email is valid and available for registration"""
+    email = request.email.strip().lower()
+    
+    # Basic format validation
+    if not validate_email_format(email):
+        return EmailCheckResponse(
+            email=email,
+            is_available=False,
+            is_valid=False,
+            message="Invalid email format"
+        )
+    
+    # Check for disposable email
+    if is_disposable_email(email):
+        return EmailCheckResponse(
+            email=email,
+            is_available=False,
+            is_valid=False,
+            message="Disposable email addresses are not allowed"
+        )
+    
+    # Check if email already exists in database
+    existing_user = crud_user.get_by_email(db, email=email)
+    if existing_user:
+        return EmailCheckResponse(
+            email=email,
+            is_available=False,
+            is_valid=True,
+            message="Email is already registered"
+        )
+    
+    return EmailCheckResponse(
+        email=email,
+        is_available=True,
+        is_valid=True,
+        message="Email is available for registration"
+    )
+
 @router.post("/register", response_model=User)
 def register_user(user_create: UserCreate, db: Session = Depends(get_db)):
-    """Register a new user"""
+    """Register a new user with enhanced email validation"""
+    email = user_create.email.strip().lower()
+    
+    # Enhanced validation before registration
+    if not validate_email_format(email):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid email format"
+        )
+    
+    if is_disposable_email(email):
+        raise HTTPException(
+            status_code=400,
+            detail="Disposable email addresses are not allowed"
+        )
+    
     # Check if user already exists
-    db_user = crud_user.get_by_email(db, email=user_create.email)
+    db_user = crud_user.get_by_email(db, email=email)
     if db_user:
         raise HTTPException(
             status_code=400,
@@ -33,7 +115,7 @@ def register_user(user_create: UserCreate, db: Session = Depends(get_db)):
         def dict(self, **kwargs):
             user_data = {
                 "name": user_create.name,
-                "email": user_create.email,
+                "email": email,  # Use the normalized email
                 "password_hash": hashed_password
             }
             # Add role if provided, otherwise use default

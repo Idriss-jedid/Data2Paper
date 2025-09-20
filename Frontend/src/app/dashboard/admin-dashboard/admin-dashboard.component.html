@@ -1,0 +1,165 @@
+<div class="admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="admin-welcome">
+        <div class="admin-avatar">
+          <div class="avatar-circle admin">
+            <mat-icon>admin_panel_settings</mat-icon>
+          </div>
+        </div>
+        <div class="welcome-text">
+          <h1>Admin Dashboard</h1>
+          <p>Manage users, tasks, and monitor system performance</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="create-task-btn" (click)="showCreateTaskForm = true">
+          <mat-icon>add</mat-icon>
+          <span>Create Task</span>
+        </button>
+        <button class="refresh-btn" (click)="refreshData()" [disabled]="isLoading">
+          <mat-icon [class.spinning]="isLoading">refresh</mat-icon>
+        </button>
+        <button class="logout-btn" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Stats -->
+  <div class="admin-stats">
+    <div class="stat-card users">
+      <div class="stat-icon">
+        <mat-icon>people</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ totalUsers }}</div>
+        <div class="stat-label">Total Users</div>
+        <div class="stat-sub">{{ activeUsers }} active</div>
+      </div>
+    </div>
+    
+    <div class="stat-card tasks">
+      <div class="stat-icon">
+        <mat-icon>assignment</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ totalTasks }}</div>
+        <div class="stat-label">Total Tasks</div>
+        <div class="stat-sub">{{ completedTasks }} completed</div>
+      </div>
+    </div>
+    
+    <div class="stat-card pending">
+      <div class="stat-icon">
+        <mat-icon>pending</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ pendingTasks }}</div>
+        <div class="stat-label">Pending Tasks</div>
+        <div class="stat-sub">Needs attention</div>
+      </div>
+    </div>
+    
+    <div class="stat-card overdue">
+      <div class="stat-icon">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ overdueTasks }}</div>
+        <div class="stat-label">Overdue Tasks</div>
+        <div class="stat-sub">Action required</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simple Dashboard for now -->
+  <div class="dashboard-content">
+    <div class="welcome-section">
+      <h2>Welcome to Admin Dashboard</h2>
+      <p>Full admin features coming soon! For now, you can see basic stats above.</p>
+      
+      <div class="quick-actions">
+        <button class="action-card" (click)="showCreateTaskForm = true">
+          <mat-icon>add_task</mat-icon>
+          <span>Create New Task</span>
+        </button>
+        
+        <button class="action-card">
+          <mat-icon>people</mat-icon>
+          <span>Manage Users</span>
+        </button>
+        
+        <button class="action-card">
+          <mat-icon>analytics</mat-icon>
+          <span>View Reports</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Task Modal -->
+  <div class="modal-overlay" *ngIf="showCreateTaskForm" (click)="showCreateTaskForm = false">
+    <div class="create-task-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Create New Task</h2>
+        <button class="close-btn" (click)="showCreateTaskForm = false">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      
+      <form class="task-form" (ngSubmit)="createTask()">
+                <div class="form-group">
+          <label for="title">Task Title</label>
+          <input type="text" [value]="newTask.title" (input)="newTask.title = $any($event.target).value" name="title" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea [value]="newTask.description" (input)="newTask.description = $any($event.target).value" name="description" rows="3" required></textarea>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="priority">Priority</label>
+            <select [value]="newTask.priority" (change)="newTask.priority = $any($event.target).value" name="priority">
+              <option [value]="TaskPriority.LOW">Low</option>
+              <option [value]="TaskPriority.MEDIUM">Medium</option>
+              <option [value]="TaskPriority.HIGH">High</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="type">Task Type</label>
+            <select [value]="newTask.type" (change)="newTask.type = $any($event.target).value" name="type">
+              <option [value]="TaskType.STUDENT">Student</option>
+              <option [value]="TaskType.EMPLOYMENT">Employment</option>
+              <option [value]="TaskType.BUSINESS">Business</option>
+              <option [value]="TaskType.CERTIFICATION">Certification</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" (click)="resetTaskForm(); showCreateTaskForm = false">
+            Cancel
+          </button>
+          <button type="submit" class="create-btn">
+            Create Task
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <mat-icon class="spinning">refresh</mat-icon>
+      <p>Loading admin dashboard...</p>
+    </div>
+  </div>
+</div>

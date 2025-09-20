@@ -1,0 +1,218 @@
+<div class="user-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="user-welcome">
+        <div class="user-avatar">
+          <div class="avatar-circle">
+            {{ currentUser?.name?.charAt(0)?.toUpperCase() }}
+          </div>
+        </div>
+        <div class="welcome-text">
+          <h1>Welcome back, {{ currentUser?.name }}!</h1>
+          <p>Here's what's happening with your tasks today</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="refresh-btn" (click)="refreshData()" [disabled]="isLoading">
+          <mat-icon [class.spinning]="isLoading">refresh</mat-icon>
+        </button>
+        <button class="logout-btn" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="quick-stats">
+    <div class="stat-card today">
+      <div class="stat-icon">
+        <mat-icon>today</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ todayTasks }}</div>
+        <div class="stat-label">Due Today</div>
+      </div>
+    </div>
+    
+    <div class="stat-card overdue">
+      <div class="stat-icon">
+        <mat-icon>schedule</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ overdueTasks }}</div>
+        <div class="stat-label">Overdue</div>
+      </div>
+    </div>
+    
+    <div class="stat-card completed">
+      <div class="stat-icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ completedThisWeek }}</div>
+        <div class="stat-label">Completed This Week</div>
+      </div>
+    </div>
+    
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <mat-icon>assignment</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ userTasks.length }}</div>
+        <div class="stat-label">Total Tasks</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <!-- Task Overview Chart -->
+    <div class="overview-section">
+      <div class="section-header">
+        <h2>Task Overview</h2>
+        <div class="chart-legend">
+          <div class="legend-item" *ngFor="let item of taskStatusData">
+            <div class="legend-color" [style.background-color]="item.color"></div>
+            <span>{{ item.name }} ({{ item.value }})</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="chart-container" *ngIf="taskStats; else noDataTemplate">
+        <div class="progress-ring-container">
+          <div class="progress-ring-item" *ngFor="let item of taskStatusData">
+            <div class="ring-wrapper">
+              <svg class="progress-ring" width="80" height="80">
+                <circle
+                  class="progress-ring-background"
+                  stroke="#f0f0f0"
+                  stroke-width="8"
+                  fill="transparent"
+                  r="32"
+                  cx="40"
+                  cy="40"/>
+                <circle
+                  class="progress-ring-progress"
+                  [attr.stroke]="item.color"
+                  stroke-width="8"
+                  fill="transparent"
+                  r="32"
+                  cx="40"
+                  cy="40"
+                  [style.stroke-dasharray]="201.06"
+                  [style.stroke-dashoffset]="201.06 - (201.06 * item.value) / (taskStats.total || 1)"/>
+              </svg>
+              <div class="ring-text">
+                <div class="ring-value">{{ item.value }}</div>
+                <div class="ring-label">{{ item.name }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Tasks -->
+    <div class="tasks-section">
+      <div class="section-header">
+        <h2>Your Recent Tasks</h2>
+        <button class="view-all-btn">
+          <span>View All</span>
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+
+      <div class="tasks-container" *ngIf="userTasks.length > 0; else noTasksTemplate">
+        <div class="task-card" *ngFor="let task of userTasks.slice(0, 6)">
+          <div class="task-header">
+            <div class="task-title">{{ task.title }}</div>
+            <div class="task-priority" [style.color]="getTaskPriorityColor(task.priority)">
+              <mat-icon>{{ getTaskPriorityIcon(task.priority) }}</mat-icon>
+              <span>{{ task.priority }}</span>
+            </div>
+          </div>
+          
+          <div class="task-description">{{ task.description }}</div>
+          
+          <div class="task-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" 
+                   [style.width.%]="task.completion_percentage"
+                   [style.background-color]="getProgressColor(task.completion_percentage)">
+              </div>
+            </div>
+            <span class="progress-text">{{ task.completion_percentage }}%</span>
+          </div>
+          
+          <div class="task-footer">
+            <div class="task-meta">
+              <div class="task-type">
+                <mat-icon>category</mat-icon>
+                <span>{{ task.type }}</span>
+              </div>
+              <div class="task-due" *ngIf="task.due_date">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ task.due_date | date:'short' }}</span>
+              </div>
+            </div>
+            
+            <div class="task-actions">
+              <div class="task-status" [style.color]="getTaskStatusColor(task.status)">
+                <div class="status-indicator" [style.background-color]="getTaskStatusColor(task.status)"></div>
+                <span>{{ task.status.replace('_', ' ') | titlecase }}</span>
+              </div>
+              
+              <div class="status-actions" *ngIf="task.status !== 'COMPLETED' && task.status !== 'CANCELLED'">
+                <button class="status-btn" 
+                        (click)="updateTaskStatus(task.id, TaskStatus.IN_PROGRESS)"
+                        *ngIf="task.status === 'PENDING'">
+                  <mat-icon>play_arrow</mat-icon>
+                  <span>Start</span>
+                </button>
+                
+                <button class="status-btn complete" 
+                        (click)="updateTaskStatus(task.id, TaskStatus.COMPLETED)"
+                        *ngIf="task.status === 'IN_PROGRESS'">
+                  <mat-icon>check</mat-icon>
+                  <span>Complete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noTasksTemplate>
+        <div class="empty-state">
+          <div class="empty-icon">
+            <mat-icon>assignment_turned_in</mat-icon>
+          </div>
+          <h3>No tasks assigned yet</h3>
+          <p>Your tasks will appear here once they are assigned to you.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <ng-template #noDataTemplate>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <mat-icon>bar_chart</mat-icon>
+      </div>
+      <h3>No data available</h3>
+      <p>Task statistics will appear here once you have tasks.</p>
+    </div>
+  </ng-template>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <mat-icon class="spinning">refresh</mat-icon>
+      <p>Loading your dashboard...</p>
+    </div>
+  </div>
+</div>

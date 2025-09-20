@@ -1,0 +1,15 @@
+<div class="dashboard-router" *ngIf="currentUser">
+  <!-- Admin Dashboard -->
+  <app-admin-dashboard *ngIf="currentUser.role === UserRole.ADMIN"></app-admin-dashboard>
+  
+  <!-- User Dashboard for regular users and managers -->
+  <app-user-dashboard *ngIf="currentUser.role === UserRole.USER || currentUser.role === UserRole.MANAGER"></app-user-dashboard>
+</div>
+
+<!-- Loading state while user data loads -->
+<div class="loading-container" *ngIf="!currentUser">
+  <div class="loading-content">
+    <mat-icon class="spinning">refresh</mat-icon>
+    <p>Loading dashboard...</p>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+<div class="email-input-container">
+  <mat-form-field appearance="outline" class="email-field">
+    <mat-label>{{ label }}</mat-label>
+    <input
+      matInput
+      type="email"
+      [placeholder]="placeholder"
+      [formControl]="emailControl"
+      [required]="required"
+      (blur)="onBlur()"
+      (focus)="onFocus()"
+      autocomplete="email"
+    />
+    
+    <!-- Validation icon -->
+    <mat-icon 
+      matSuffix 
+      [class]="getValidationClass()"
+      *ngIf="getValidationIcon()"
+    >
+      {{ getValidationIcon() }}
+    </mat-icon>
+    
+    <!-- Validation message -->
+    <mat-error *ngIf="validationResult.message && (!validationResult.isValid || !validationResult.isAvailable)">
+      {{ validationResult.message }}
+    </mat-error>
+    
+    <!-- Success message -->
+    <mat-hint 
+      *ngIf="validationResult.isValid && validationResult.isAvailable && validationResult.message"
+      class="success-hint"
+    >
+      {{ validationResult.message }}
+    </mat-hint>
+  </mat-form-field>
+
+  <!-- Email suggestions dropdown -->
+  <div class="suggestions-dropdown" *ngIf="showSuggestionsList && suggestions.length > 0">
+    <div class="suggestions-header">Did you mean?</div>
+    <button
+      type="button"
+      class="suggestion-item"
+      *ngFor="let suggestion of suggestions"
+      (click)="selectSuggestion(suggestion)"
+      (mousedown)="$event.preventDefault()"
+    >
+      <mat-icon>mail</mat-icon>
+      <span>{{ suggestion }}</span>
+    </button>
+  </div>
+</div>

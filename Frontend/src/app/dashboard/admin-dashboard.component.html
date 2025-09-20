@@ -1,0 +1,420 @@
+<div class="admin-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="admin-welcome">
+        <div class="admin-avatar">
+          <div class="avatar-circle admin">
+            <mat-icon>admin_panel_settings</mat-icon>
+          </div>
+        </div>
+        <div class="welcome-text">
+          <h1>Admin Dashboard</h1>
+          <p>Manage users, tasks, and monitor system performance</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="create-task-btn" (click)="showCreateTaskForm = true">
+          <mat-icon>add</mat-icon>
+          <span>Create Task</span>
+        </button>
+        <button class="refresh-btn" (click)="refreshData()" [disabled]="isLoading">
+          <mat-icon [class.spinning]="isLoading">refresh</mat-icon>
+        </button>
+        <button class="logout-btn" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Stats -->
+  <div class="admin-stats">
+    <div class="stat-card users">
+      <div class="stat-icon">
+        <mat-icon>people</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ totalUsers }}</div>
+        <div class="stat-label">Total Users</div>
+        <div class="stat-sub">{{ activeUsers }} active</div>
+      </div>
+    </div>
+    
+    <div class="stat-card tasks">
+      <div class="stat-icon">
+        <mat-icon>assignment</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ totalTasks }}</div>
+        <div class="stat-label">Total Tasks</div>
+        <div class="stat-sub">{{ completedTasks }} completed</div>
+      </div>
+    </div>
+    
+    <div class="stat-card pending">
+      <div class="stat-icon">
+        <mat-icon>pending</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ pendingTasks }}</div>
+        <div class="stat-label">Pending Tasks</div>
+        <div class="stat-sub">Needs attention</div>
+      </div>
+    </div>
+    
+    <div class="stat-card overdue">
+      <div class="stat-icon">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <div class="stat-content">
+        <div class="stat-number">{{ overdueTasks }}</div>
+        <div class="stat-label">Overdue Tasks</div>
+        <div class="stat-sub">Action required</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <!-- Analytics Section -->
+    <div class="analytics-section">
+      <div class="section-header">
+        <h2>Analytics Overview</h2>
+      </div>
+      
+      <div class="charts-grid">
+        <!-- Task Status Chart -->
+        <div class="chart-card">
+          <h3>Task Status Distribution</h3>
+          <div class="chart-container" *ngIf="taskStats; else noDataTemplate">
+            <div class="donut-chart">
+              <div class="chart-items">
+                <div class="chart-item" *ngFor="let item of taskStatusData">
+                  <div class="item-indicator" [style.background-color]="item.color"></div>
+                  <div class="item-details">
+                    <div class="item-name">{{ item.name }}</div>
+                    <div class="item-value">{{ item.value }}</div>
+                  </div>
+                  <div class="item-percentage">
+                    {{ ((item.value / (taskStats?.total || 1)) * 100).toFixed(1) }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Priority Chart -->
+        <div class="chart-card">
+          <h3>Priority Distribution</h3>
+          <div class="chart-container">
+            <div class="bar-chart">
+              <div class="bar-item" *ngFor="let item of taskPriorityData">
+                <div class="bar-label">{{ item.name }}</div>
+                <div class="bar-container">
+                  <div class="bar-fill" 
+                       [style.width.%]="(item.value / totalTasks) * 100"
+                       [style.background-color]="item.color">
+                  </div>
+                </div>
+                <div class="bar-value">{{ item.value }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Type Chart -->
+        <div class="chart-card">
+          <h3>Task Types</h3>
+          <div class="chart-container">
+            <div class="type-chart">
+              <div class="type-item" *ngFor="let item of taskTypeData">
+                <div class="type-icon" [style.background-color]="item.color">
+                  <mat-icon>category</mat-icon>
+                </div>
+                <div class="type-details">
+                  <div class="type-name">{{ item.name }}</div>
+                  <div class="type-count">{{ item.value }} tasks</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity Section -->
+    <div class="activity-section">
+      <div class="activity-grid">
+        <!-- Recent Tasks -->
+        <div class="activity-card">
+          <div class="card-header">
+            <h3>Recent Tasks</h3>
+            <button class="view-all-btn">
+              <span>View All</span>
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+          
+          <div class="activity-list" *ngIf="recentTasks.length > 0; else noTasksTemplate">
+            <div class="activity-item" *ngFor="let task of recentTasks">
+              <div class="item-icon" [style.background-color]="getTaskStatusColor(task.status)">
+                <mat-icon>assignment</mat-icon>
+              </div>
+              <div class="item-content">
+                <div class="item-title">{{ task.title }}</div>
+                <div class="item-meta">
+                  <span class="task-type">{{ task.type }}</span>
+                  <span class="task-priority" [style.color]="getTaskPriorityColor(task.priority)">
+                    {{ task.priority }}
+                  </span>
+                </div>
+              </div>
+              <div class="item-actions">
+                <div class="task-status" [style.color]="getTaskStatusColor(task.status)">
+                  {{ task.status.replace('_', ' ') | titlecase }}
+                </div>
+                <div class="action-buttons">
+                  <button class="action-btn" (click)="updateTaskStatus(task.id, 'COMPLETED')"
+                          *ngIf="task.status !== 'COMPLETED'">
+                    <mat-icon>check</mat-icon>
+                  </button>
+                  <button class="action-btn delete" (click)="deleteTask(task.id)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Users -->
+        <div class="activity-card">
+          <div class="card-header">
+            <h3>User Management</h3>
+            <button class="view-all-btn">
+              <span>Manage</span>
+              <mat-icon>settings</mat-icon>
+            </button>
+          </div>
+          
+          <div class="activity-list">
+            <div class="activity-item" *ngFor="let user of recentUsers">
+              <div class="item-icon" [style.background-color]="getUserRoleColor(user.role)">
+                <mat-icon>person</mat-icon>
+              </div>
+              <div class="item-content">
+                <div class="item-title">{{ user.name }}</div>
+                <div class="item-meta">
+                  <span class="user-email">{{ user.email }}</span>
+                  <span class="user-role" [style.color]="getUserRoleColor(user.role)">
+                    {{ user.role }}
+                  </span>
+                </div>
+              </div>
+              <div class="item-actions">
+                <div class="user-status" [style.color]="getUserStatusColor(user.is_active)">
+                  <div class="status-dot" [style.background-color]="getUserStatusColor(user.is_active)"></div>
+                  {{ user.is_active ? 'Active' : 'Inactive' }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Tasks Management -->
+    <div class="tasks-management">
+      <div class="section-header">
+        <h2>Task Management</h2>
+        <div class="management-actions">
+          <button class="filter-btn">
+            <mat-icon>filter_list</mat-icon>
+            <span>Filter</span>
+          </button>
+          <button class="export-btn">
+            <mat-icon>download</mat-icon>
+            <span>Export</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tasks-table" *ngIf="allTasks.length > 0; else noTasksTemplate">
+        <div class="table-header">
+          <div class="col-title">Task</div>
+          <div class="col-type">Type</div>
+          <div class="col-priority">Priority</div>
+          <div class="col-status">Status</div>
+          <div class="col-assigned">Assigned To</div>
+          <div class="col-due">Due Date</div>
+          <div class="col-progress">Progress</div>
+          <div class="col-actions">Actions</div>
+        </div>
+        
+        <div class="table-row" *ngFor="let task of allTasks.slice(0, 10)">
+          <div class="col-title">
+            <div class="task-info">
+              <div class="task-name">{{ task.title }}</div>
+              <div class="task-desc">{{ task.description | slice:0:50 }}...</div>
+            </div>
+          </div>
+          <div class="col-type">
+            <div class="type-badge" [style.background-color]="getTaskTypeColor(task.type)">
+              {{ task.type }}
+            </div>
+          </div>
+          <div class="col-priority">
+            <div class="priority-badge" [style.color]="getTaskPriorityColor(task.priority)">
+              <mat-icon>{{ task.priority === 'URGENT' ? 'priority_high' : task.priority === 'HIGH' ? 'keyboard_arrow_up' : task.priority === 'LOW' ? 'keyboard_arrow_down' : 'remove' }}</mat-icon>
+              {{ task.priority }}
+            </div>
+          </div>
+          <div class="col-status">
+            <div class="status-badge" [style.background-color]="getTaskStatusColor(task.status)">
+              {{ task.status.replace('_', ' ') | titlecase }}
+            </div>
+          </div>
+          <div class="col-assigned">
+            <div class="assigned-user" *ngIf="task.assigned_to; else unassignedTemplate">
+              User #{{ task.assigned_to }}
+            </div>
+            <ng-template #unassignedTemplate>
+              <span class="unassigned">Unassigned</span>
+            </ng-template>
+          </div>
+          <div class="col-due">
+            <div class="due-date" *ngIf="task.due_date; else noDueDateTemplate">
+              {{ task.due_date | date:'short' }}
+            </div>
+            <ng-template #noDueDateTemplate>
+              <span class="no-date">No due date</span>
+            </ng-template>
+          </div>
+          <div class="col-progress">
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" 
+                     [style.width.%]="task.completion_percentage"
+                     [style.background-color]="task.completion_percentage >= 80 ? '#34c759' : task.completion_percentage >= 50 ? '#ffcc00' : '#ff9500'">
+                </div>
+              </div>
+              <span class="progress-text">{{ task.completion_percentage }}%</span>
+            </div>
+          </div>
+          <div class="col-actions">
+            <div class="table-actions">
+              <button class="table-action-btn" title="Edit">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button class="table-action-btn" title="Assign">
+                <mat-icon>person_add</mat-icon>
+              </button>
+              <button class="table-action-btn delete" title="Delete" (click)="deleteTask(task.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Task Modal -->
+  <div class="modal-overlay" *ngIf="showCreateTaskForm" (click)="showCreateTaskForm = false">
+    <div class="create-task-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Create New Task</h2>
+        <button class="close-btn" (click)="showCreateTaskForm = false">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      
+      <form class="task-form" (ngSubmit)="createTask()">
+        <div class="form-group">
+          <label>Task Title</label>
+          <input type="text" [(ngModel)]="newTask.title" name="title" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Description</label>
+          <textarea [(ngModel)]="newTask.description" name="description" rows="3" required></textarea>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Priority</label>
+            <select [(ngModel)]="newTask.priority" name="priority">
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+              <option value="URGENT">Urgent</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Type</label>
+            <select [(ngModel)]="newTask.type" name="type">
+              <option value="EMPLOYMENT">Employment</option>
+              <option value="STUDENT">Student</option>
+              <option value="BUSINESS">Business</option>
+              <option value="CERTIFICATION">Certification</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Assign To (User ID)</label>
+            <input type="number" [(ngModel)]="newTask.assigned_to" name="assigned_to">
+          </div>
+          
+          <div class="form-group">
+            <label>Due Date</label>
+            <input type="datetime-local" [(ngModel)]="newTask.due_date" name="due_date">
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" (click)="resetTaskForm(); showCreateTaskForm = false">
+            Cancel
+          </button>
+          <button type="submit" class="create-btn">
+            Create Task
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <ng-template #noTasksTemplate>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <mat-icon>assignment</mat-icon>
+      </div>
+      <h3>No tasks found</h3>
+      <p>Tasks will appear here once they are created.</p>
+    </div>
+  </ng-template>
+
+  <ng-template #noDataTemplate>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <mat-icon>bar_chart</mat-icon>
+      </div>
+      <h3>No data available</h3>
+      <p>Analytics will appear here once you have task data.</p>
+    </div>
+  </ng-template>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <mat-icon class="spinning">refresh</mat-icon>
+      <p>Loading admin dashboard...</p>
+    </div>
+  </div>
+</div>

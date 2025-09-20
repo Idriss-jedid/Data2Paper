@@ -1,19 +1,23 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 import os
 
 
 class Settings(BaseSettings):
+    # Database Settings
     database_hostname: str
     database_port: str
     database_password: str
     database_name: str
     database_username: str
-    mail_username: str
-    mail_password: str
-    mail_from: str
-    mail_port: int
-    mail_server: str
-    mail_from_name: str
+    
+    # Email Settings (optional)
+    smtp_server: Optional[str] = "smtp.gmail.com"
+    smtp_port: Optional[int] = 587
+    smtp_username: Optional[str] = None
+    smtp_password: Optional[str] = None
+    mail_from: Optional[str] = None
+    mail_from_name: Optional[str] = "Data2Paper"
     
     # JWT Settings
     secret_key: str = "your-secret-key-here-change-in-production"
@@ -21,10 +25,29 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     
     # LLM Settings
-    gemini_api_key: str 
+    gemini_api_key: Optional[str] = None 
+    
+    # OAuth Settings
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
+    github_client_id: Optional[str] = None
+    github_client_secret: Optional[str] = None
+    apple_client_id: Optional[str] = None
+    apple_client_secret: Optional[str] = None
+    apple_team_id: Optional[str] = None
+    apple_key_id: Optional[str] = None
+    
+    # Application URLs
+    frontend_url: str = "http://localhost:4200"
+    backend_url: str = "http://localhost:8000"
+    
+    # File Storage
+    upload_directory: str = "./uploads"
+    max_file_size: int = 10485760  # 10MB
     
     model_config = SettingsConfigDict(
-        env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+        env_file=".env",
+        extra="ignore"
     )
 
     @property
